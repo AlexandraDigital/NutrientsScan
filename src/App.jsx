@@ -1,8 +1,5 @@
 import { useState, useRef, useCallback } from "react";
 
-const GROQ_API = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
-const LS_KEY = "nutrilens_groq_key";
 
 /* ─── helpers ─────────────────────────────────────────────────── */
 // Groq uses OpenAI-style image_url with full data URI
@@ -87,52 +84,8 @@ function CalorieArc({ consumed, goal }) {
   );
 }
 
-/* ─── API key setup screen ────────────────────────────────────── */
-function ApiKeyScreen({ onSave }) {
-  const [key, setKey] = useState("");
-  return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, background: "#f4f7f0" }}>
-      <div style={{ background: "#fff", borderRadius: 24, padding: 36, maxWidth: 400, width: "100%", border: "1px solid #dce8d4", boxShadow: "0 4px 24px rgba(26,46,28,0.07)" }}>
-        <div style={{ fontSize: 40, marginBottom: 16, textAlign: "center" }}>🥗</div>
-        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 700, color: "#1a2e1c", textAlign: "center", marginBottom: 8 }}>NutriLens</h1>
-        <p style={{ color: "#6b7a6b", fontSize: 14, textAlign: "center", marginBottom: 28, lineHeight: 1.6 }}>
-          Enter your Groq API key to get started.<br />
-          Your key is stored locally and never sent anywhere except the Groq API.
-        </p>
-        <label style={{ fontSize: 12, fontWeight: 700, color: "#4a7c5a", letterSpacing: "0.06em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>
-          Groq API Key
-        </label>
-        <input
-          type="password"
-          placeholder="gsk_..."
-          value={key}
-          onChange={(e) => setKey(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && key.startsWith("gsk_") && onSave(key)}
-          style={{ width: "100%", padding: "12px 14px", border: "1.5px solid #dce8d4", borderRadius: 12, fontSize: 14, fontFamily: "inherit", outline: "none", marginBottom: 14, background: "#f9fdf6", color: "#1a2e1c" }}
-        />
-        <button
-          onClick={() => onSave(key)}
-          disabled={!key.startsWith("gsk_")}
-          style={{ width: "100%", padding: 14, border: "none", borderRadius: 14, cursor: key.startsWith("gsk_") ? "pointer" : "not-allowed",
-            background: key.startsWith("gsk_") ? "#1a2e1c" : "#d0dcc8",
-            color: key.startsWith("gsk_") ? "#a8d55a" : "#8aaa80",
-            fontSize: 15, fontWeight: 700, fontFamily: "inherit" }}>
-          Get Started →
-        </button>
-        <p style={{ color: "#a0b898", fontSize: 12, textAlign: "center", marginTop: 16 }}>
-          Get your key at{" "}
-          <a href="https://console.groq.com" target="_blank" rel="noreferrer" style={{ color: "#4a7c5a" }}>
-            console.anthropic.com
-          </a>
-        </p>
-      </div>
-    </div>
-  );
-}
-
 /* ─── main app ─────────────────────────────────────────────────── */
 export default function App() {
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem(LS_KEY) || "");
   const [mode, setMode] = useState("calories");
   const [imgUrl, setImgUrl] = useState(null);
   const [imgDataURL, setImgDataURL] = useState(null);
@@ -147,11 +100,6 @@ export default function App() {
   const fileRef = useRef();
 
   const totalCals = log.reduce((s, i) => s + i.calories, 0);
-
-  const saveKey = (k) => {
-    localStorage.setItem(LS_KEY, k);
-    setApiKey(k);
-  };
 
   const handleFile = useCallback(async (file) => {
     if (!file || !file.type.startsWith("image/")) return;
@@ -193,36 +141,20 @@ export default function App() {
 {"ingredients":["string"],"recipes":[{"name":"string","time":"string","difficulty":"string","calories":number,"description":"string","steps":["string"]}],"missingCommon":["string"]}`;
 
     try {
-      const res = await fetch(GROQ_API, {
+      const res = await fetch("/api/analyze", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: GROQ_MODEL,
-          max_tokens: 1000,
-          messages: [
-            {
-              role: "user",
-              content: [
-                { type: "image_url", image_url: { url: imgDataURL } },
-                { type: "text", text: prompt },
-              ],
-            },
-          ],
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageDataURL: imgDataURL, mode }),
       });
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error?.message || `API error ${res.status}`);
+        throw new Error(err?.error || `Server error ${res.status}`);
       }
 
       const data = await res.json();
-      const raw = data.choices?.[0]?.message?.content || "";
-      const clean = raw.replace(/```json|```/g, "").trim();
-      setResult(JSON.parse(clean));
+      if (data.error) throw new Error(data.error);
+      setResult(data);
     } catch (err) {
       setError(err.message || "Couldn't analyze the image. Please try a clearer photo.");
     }
@@ -245,8 +177,6 @@ export default function App() {
 
   const removeLog = (id) => setLog((prev) => prev.filter((i) => i.id !== id));
 
-  if (!apiKey) return <ApiKeyScreen onSave={saveKey} />;
-
   return (
     <div style={{ fontFamily: "'DM Sans', -apple-system, sans-serif", background: "#f4f7f0", minHeight: "100vh", paddingBottom: 48 }}>
 
@@ -262,12 +192,7 @@ export default function App() {
               <div style={{ color: "#6b9b5e", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase" }}>AI Food Scanner</div>
             </div>
           </div>
-          <button
-            onClick={() => { localStorage.removeItem(LS_KEY); setApiKey(""); }}
-            title="Change API key"
-            style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 8, color: "#6b9b5e", fontSize: 12, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}>
-            API Key
-          </button>
+
         </div>
 
         {/* Mode tabs */}
