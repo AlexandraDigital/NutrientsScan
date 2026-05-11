@@ -1,6 +1,6 @@
 # 🥗 NutriLens — AI Food Scanner
 
-An AI-powered web app to scan food for calories and find recipes from your ingredients, using Claude's vision AI.
+An AI-powered web app to scan food for calories and find recipes from your ingredients, powered by **Groq** (meta-llama/llama-4-scout-17b-16e-instruct vision model).
 
 ## Features
 
@@ -16,9 +16,9 @@ An AI-powered web app to scan food for calories and find recipes from your ingre
 npm install
 ```
 
-### 2. Get an Anthropic API key
+### 2. Get a Groq API key
 
-Sign up at [console.anthropic.com](https://console.anthropic.com) and create an API key.
+Sign up for free at [console.groq.com](https://console.groq.com) and create an API key (starts with `gsk_`).
 
 ### 3. Run the app
 
@@ -26,9 +26,9 @@ Sign up at [console.anthropic.com](https://console.anthropic.com) and create an 
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open http://localhost:3000 in your browser.
 
-On first launch, you'll be prompted to enter your Anthropic API key. It's stored in `localStorage` and only sent to the Anthropic API — never anywhere else.
+On first launch you'll be prompted to enter your Groq API key. It's stored in localStorage and only ever sent to the Groq API.
 
 ## Build for production
 
@@ -39,12 +39,13 @@ npm run preview
 
 ## Tech Stack
 
-- **React 18** + **Vite**
-- **Anthropic Claude claude-sonnet-4-20250514** with vision (image analysis)
+- React 18 + Vite
+- Groq API — meta-llama/llama-4-scout-17b-16e-instruct (vision)
 - Pure CSS (no UI library) with Google Fonts
 
 ## Notes
 
-- The app calls the Anthropic API directly from the browser using the `anthropic-dangerous-direct-browser-access` header (fine for personal use)
-- For a production deployment, route API calls through your own backend to keep your API key secret
+- The app calls the Groq API directly from the browser — fine for personal use
+- For a production deployment, route API calls through your own backend to keep your key secret
 - Daily calorie log resets on page refresh (no persistence by default)
+- Groq offers a generous free tier with very fast inference
