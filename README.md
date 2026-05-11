@@ -1,51 +1,64 @@
-# 🥗 NutriLens — AI Food Scanner
+# 🥗 NutriLens — AI Food Scanner (Cloudflare Pages)
 
-An AI-powered web app to scan food for calories and find recipes from your ingredients, powered by **Groq** (meta-llama/llama-4-scout-17b-16e-instruct vision model).
+Powered by Groq vision AI, deployed on Cloudflare Pages with a Pages Function proxy so your API key stays server-side.
 
-## Features
+## Project structure
 
-- **🔥 Calorie Scan** — Upload a photo of any meal to get instant calorie counts, macro breakdown (protein/carbs/fat/fiber), a health score, and nutrition tips
-- **🥘 Recipe Finder** — Upload a photo of your fridge, pantry, or laid-out ingredients and get 3 recipe suggestions with step-by-step instructions
-- **📊 Daily Log** — Track your calorie intake against a 2,000 kcal daily goal with a live arc chart
+```
+nutrilens/
+├── functions/
+│   └── api/
+│       └── analyze.js   ← Cloudflare Pages Function (server-side Groq proxy)
+├── src/
+│   ├── main.jsx
+│   └── App.jsx          ← React frontend (no API key in browser)
+├── index.html
+├── package.json
+└── vite.config.js
+```
 
-## Setup
+## Deploy to Cloudflare Pages
 
-### 1. Install dependencies
+### 1. Push to GitHub
+
+```bash
+git init && git add . && git commit -m "init"
+git remote add origin https://github.com/YOU/nutrilens.git
+git push -u origin main
+```
+
+### 2. Connect in Cloudflare Dashboard
+
+- Go to **Pages → Create a project → Connect to Git**
+- Select your repo
+- Build settings:
+  - **Framework preset**: Vite
+  - **Build command**: `npm run build`
+  - **Build output directory**: `dist`
+
+### 3. Add your Groq API key
+
+- Pages → Your project → **Settings → Environment variables**
+- Add: `GROQ_API_KEY` = `gsk_...` (get one free at console.groq.com)
+- Set for both **Production** and **Preview**
+
+### 4. Deploy
+
+Cloudflare will build and deploy. The `functions/api/analyze.js` file is automatically picked up as a serverless function at `/api/analyze`.
+
+## Local dev
 
 ```bash
 npm install
+npx wrangler pages dev dist --compatibility-date=2024-01-01
 ```
 
-### 2. Get a Groq API key
-
-Sign up for free at [console.groq.com](https://console.groq.com) and create an API key (starts with `gsk_`).
-
-### 3. Run the app
+Or with Vite only (functions won't run locally without wrangler):
 
 ```bash
 npm run dev
 ```
 
-Open http://localhost:3000 in your browser.
+## How it works
 
-On first launch you'll be prompted to enter your Groq API key. It's stored in localStorage and only ever sent to the Groq API.
-
-## Build for production
-
-```bash
-npm run build
-npm run preview
-```
-
-## Tech Stack
-
-- React 18 + Vite
-- Groq API — meta-llama/llama-4-scout-17b-16e-instruct (vision)
-- Pure CSS (no UI library) with Google Fonts
-
-## Notes
-
-- The app calls the Groq API directly from the browser — fine for personal use
-- For a production deployment, route API calls through your own backend to keep your key secret
-- Daily calorie log resets on page refresh (no persistence by default)
-- Groq offers a generous free tier with very fast inference
+The browser sends `{ imageDataURL, mode }` to `/api/analyze`. The Cloudflare Function adds the `GROQ_API_KEY` header server-side and forwards to Groq — so the key is never exposed to users.
