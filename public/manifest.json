@@ -1,40 +1,44 @@
 {
-  "name": "NutrientsScan",
-  "short_name": "NutrientsScan",
-  "description": "AI-powered food scanner - Scan food items to get detailed nutrition information powered by AI",
+  "name": "NutriLens",
+  "short_name": "NutriLens",
+  "description": "AI-powered food scanner - Scan food items to get detailed nutrition information",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#ffffff",
-  "theme_color": "#a8d55a",
+  "theme_color": "#1a4d2e",
   "icons": [
     {
-      "src": "/NutrientsScan-logo-192x192.png",
+      "src": "/NutriLens-logo-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/NutrientsScan-logo-512x512.png",
+      "src": "/NutriLens-logo-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/NutrientsScan-logo-512x512.png",
+      "src": "/NutriLens-logo-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     }
   ],
-  "categories": ["food", "health"],
+  "categories": ["food", "health", "productivity"],
   "shortcuts": [
     {
       "name": "Scan Food",
       "short_name": "Scan",
-      "description": "Quick access to scan food items",
-      "url": "/?mode=scan"
+      "description": "Quickly scan and analyze food items",
+      "url": "/?mode=scan",
+      "icons": [{
+        "src": "/NutriLens-logo-192x192.png",
+        "sizes": "192x192"
+      }]
     }
   ]
 }
